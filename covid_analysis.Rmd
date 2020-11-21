@@ -1,0 +1,34 @@
+---
+title: "Covid Analysis"
+author: "Monika Zielińska"
+date: "21 11 2020"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r libraries, include=FALSE}
+library(readxl)
+library(dplyr)
+require(zoo)
+```
+
+```{r load data, include=FALSE, cache = TRUE}
+data <- read_excel("wuhan_blood_sample_data_Jan_Feb_2020.xlsx")
+```
+
+```{r data cleaning, include=FALSE}
+df <- as_tibble(data)
+# replace NA with most recent not-NA prior to it
+df$PATIENT_ID <- na.locf(df$PATIENT_ID)
+
+```
+
+```{r summary}
+knitr::kable(summary(df))
+```
