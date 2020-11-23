@@ -13,21 +13,60 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r libraries, include=FALSE}
-library(readxl)
+library(ggplot2)
 library(dplyr)
+library(readxl)
+library(httr)
 require(zoo)
 ```
 
+```{r other options}
+print.tbl_df <- function(x, ...) {
+  print.data.frame(x, ...)
+  invisible(x)
+}
+```
+
 ```{r load data, include=FALSE, cache = TRUE}
-data <- read_excel("wuhan_blood_sample_data_Jan_Feb_2020.xlsx")
+url_covid <- "http://www.cs.put.poznan.pl/dbrzezinski/teaching/zed/wuhan_blood_sample_data_Jan_Feb_2020.xlsx"
+GET(url_covid, write_disk(tf <- tempfile(fileext = ".xlsx")))
+data <- read_xlsx(tf)
+unlink(tf)
 ```
 
 ```{r data cleaning, include=FALSE}
 df <- as_tibble(data)
 # replace NA with most recent not-NA prior to it
 df$PATIENT_ID <- na.locf(df$PATIENT_ID)
+df <- df %>% 
+  rename_with(~ tolower(gsub(" ", "_", .x, fixed = TRUE))) %>%
+  mutate(survived = as.logical(outcome)) %>%
+  mutate(sex = ifelse(gender==1, "male", "female")) %>%
+  mutate(age_group = case_when(
+    age <= 30 ~ "young adult", 
+    age < 65 ~ "adult",
+    TRUE ~ "elderly")) %>%
+  select(-c(outcome, gender))
+
+patients_data <- df %>%
+  select(c(patient_id, sex, age, age_group, admission_time, discharge_time, survived)) %>%
+  unique() %>%
+  mutate(admission_date = as.Date(admission_time)) %>%
+  mutate(discharge_date = as.Date(discharge_time))
+```
+
+```{r data description}
+count(df)
+count(patients_data)
+count(patients_data, sex)
+count(patients_data, age_group)
+count(patients_data, survived)
 
 ```
+
+The dataset contains 6120 blood tests of 375 patients. There are 224 males and 151 females. There are 22 young adults (<= 30 years), 192 adults (< 65) and 161 elderly. 201 patients died, whereas 174 survived.
+
+
 
 ```{r summary}
 knitr::kable(summary(df))

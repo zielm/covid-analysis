@@ -1564,22 +1564,28 @@ div.tocify {
 </div>
 
 
+<pre><code>##      n
+## 1 6120</code></pre>
+<pre><code>##     n
+## 1 375</code></pre>
+<pre><code>##      sex   n
+## 1 female 151
+## 2   male 224</code></pre>
+<pre><code>##     age_group   n
+## 1       adult 192
+## 2     elderly 161
+## 3 young adult  22</code></pre>
+<pre><code>##   survived   n
+## 1    FALSE 201
+## 2     TRUE 174</code></pre>
+<p>The dataset contains 6120 blood tests of 375 patients. There are 224 males and 151 females. There are 22 young adults (&lt;= 30 years), 192 adults (&lt; 65) and 161 elderly. 201 patients died, whereas 174 survived.</p>
 <table style="width:100%;">
 <colgroup>
 <col width="0%"></col>
 <col width="0%"></col>
 <col width="1%"></col>
 <col width="0%"></col>
-<col width="0%"></col>
 <col width="1%"></col>
-<col width="1%"></col>
-<col width="0%"></col>
-<col width="1%"></col>
-<col width="0%"></col>
-<col width="0%"></col>
-<col width="1%"></col>
-<col width="0%"></col>
-<col width="0%"></col>
 <col width="1%"></col>
 <col width="1%"></col>
 <col width="0%"></col>
@@ -1587,11 +1593,18 @@ div.tocify {
 <col width="0%"></col>
 <col width="0%"></col>
 <col width="0%"></col>
+<col width="1%"></col>
+<col width="1%"></col>
+<col width="0%"></col>
+<col width="0%"></col>
+<col width="0%"></col>
+<col width="0%"></col>
+<col width="0%"></col>
+<col width="0%"></col>
 <col width="0%"></col>
 <col width="0%"></col>
 <col width="1%"></col>
 <col width="1%"></col>
-<col width="2%"></col>
 <col width="0%"></col>
 <col width="0%"></col>
 <col width="2%"></col>
@@ -1605,15 +1618,15 @@ div.tocify {
 <col width="0%"></col>
 <col width="0%"></col>
 <col width="0%"></col>
-<col width="1%"></col>
-<col width="0%"></col>
-<col width="1%"></col>
-<col width="1%"></col>
-<col width="1%"></col>
 <col width="0%"></col>
 <col width="0%"></col>
 <col width="1%"></col>
+<col width="0%"></col>
 <col width="1%"></col>
+<col width="0%"></col>
+<col width="0%"></col>
+<col width="1%"></col>
+<col width="0%"></col>
 <col width="1%"></col>
 <col width="0%"></col>
 <col width="1%"></col>
@@ -1629,7 +1642,7 @@ div.tocify {
 <col width="3%"></col>
 <col width="1%"></col>
 <col width="1%"></col>
-<col width="1%"></col>
+<col width="0%"></col>
 <col width="1%"></col>
 <col width="0%"></col>
 <col width="1%"></col>
@@ -1646,93 +1659,97 @@ div.tocify {
 <col width="0%"></col>
 <col width="0%"></col>
 <col width="1%"></col>
+<col width="0%"></col>
+<col width="0%"></col>
+<col width="0%"></col>
 <col width="0%"></col>
 <col width="0%"></col>
 </colgroup>
 <thead>
 <tr class="header">
 <th align="left"></th>
-<th align="left">PATIENT_ID</th>
-<th align="left">RE_DATE</th>
+<th align="left">patient_id</th>
+<th align="left">re_date</th>
 <th align="left">age</th>
-<th align="left">gender</th>
-<th align="left">Admission time</th>
-<th align="left">Discharge time</th>
-<th align="left">outcome</th>
-<th align="left">Hypersensitive cardiac troponinI</th>
+<th align="left">admission_time</th>
+<th align="left">discharge_time</th>
+<th align="left">hypersensitive_cardiac_troponini</th>
 <th align="left">hemoglobin</th>
-<th align="left">Serum chloride</th>
-<th align="left">Prothrombin time</th>
+<th align="left">serum_chloride</th>
+<th align="left">prothrombin_time</th>
 <th align="left">procalcitonin</th>
 <th align="left">eosinophils(%)</th>
-<th align="left">Interleukin 2 receptor</th>
-<th align="left">Alkaline phosphatase</th>
+<th align="left">interleukin_2_receptor</th>
+<th align="left">alkaline_phosphatase</th>
 <th align="left">albumin</th>
 <th align="left">basophil(%)</th>
-<th align="left">Interleukin 10</th>
-<th align="left">Total bilirubin</th>
-<th align="left">Platelet count</th>
+<th align="left">interleukin_10</th>
+<th align="left">total_bilirubin</th>
+<th align="left">platelet_count</th>
 <th align="left">monocytes(%)</th>
 <th align="left">antithrombin</th>
-<th align="left">Interleukin 8</th>
-<th align="left">indirect bilirubin</th>
-<th align="left">Red blood cell distribution width</th>
+<th align="left">interleukin_8</th>
+<th align="left">indirect_bilirubin</th>
+<th align="left">red_blood_cell_distribution_width</th>
 <th align="left">neutrophils(%)</th>
-<th align="left">total protein</th>
-<th align="left">Quantification of Treponema pallidum antibodies</th>
-<th align="left">Prothrombin activity</th>
-<th align="left">HBsAg</th>
-<th align="left">mean corpuscular volume</th>
+<th align="left">total_protein</th>
+<th align="left">quantification_of_treponema_pallidum_antibodies</th>
+<th align="left">prothrombin_activity</th>
+<th align="left">hbsag</th>
+<th align="left">mean_corpuscular_volume</th>
 <th align="left">hematocrit</th>
-<th align="left">White blood cell count</th>
-<th align="left">Tumor necrosis factorα</th>
-<th align="left">mean corpuscular hemoglobin concentration</th>
+<th align="left">white_blood_cell_count</th>
+<th align="left">tumor_necrosis_factorα</th>
+<th align="left">mean_corpuscular_hemoglobin_concentration</th>
 <th align="left">fibrinogen</th>
-<th align="left">Interleukin 1β</th>
-<th align="left">Urea</th>
-<th align="left">lymphocyte count</th>
-<th align="left">PH value</th>
-<th align="left">Red blood cell count</th>
-<th align="left">Eosinophil count</th>
-<th align="left">Corrected calcium</th>
-<th align="left">Serum potassium</th>
+<th align="left">interleukin_1β</th>
+<th align="left">urea</th>
+<th align="left">lymphocyte_count</th>
+<th align="left">ph_value</th>
+<th align="left">red_blood_cell_count</th>
+<th align="left">eosinophil_count</th>
+<th align="left">corrected_calcium</th>
+<th align="left">serum_potassium</th>
 <th align="left">glucose</th>
-<th align="left">neutrophils count</th>
-<th align="left">Direct bilirubin</th>
-<th align="left">Mean platelet volume</th>
+<th align="left">neutrophils_count</th>
+<th align="left">direct_bilirubin</th>
+<th align="left">mean_platelet_volume</th>
 <th align="left">ferritin</th>
-<th align="left">RBC distribution width SD</th>
-<th align="left">Thrombin time</th>
+<th align="left">rbc_distribution_width_sd</th>
+<th align="left">thrombin_time</th>
 <th align="left">(%)lymphocyte</th>
-<th align="left">HCV antibody quantification</th>
-<th align="left">D-D dimer</th>
-<th align="left">Total cholesterol</th>
-<th align="left">aspartate aminotransferase</th>
-<th align="left">Uric acid</th>
-<th align="left">HCO3-</th>
+<th align="left">hcv_antibody_quantification</th>
+<th align="left">d-d_dimer</th>
+<th align="left">total_cholesterol</th>
+<th align="left">aspartate_aminotransferase</th>
+<th align="left">uric_acid</th>
+<th align="left">hco3-</th>
 <th align="left">calcium</th>
-<th align="left">Amino-terminal brain natriuretic peptide precursor(NT-proBNP)</th>
-<th align="left">Lactate dehydrogenase</th>
-<th align="left">platelet large cell ratio</th>
-<th align="left">Interleukin 6</th>
-<th align="left">Fibrin degradation products</th>
-<th align="left">monocytes count</th>
-<th align="left">PLT distribution width</th>
+<th align="left">amino-terminal_brain_natriuretic_peptide_precursor(nt-probnp)</th>
+<th align="left">lactate_dehydrogenase</th>
+<th align="left">platelet_large_cell_ratio</th>
+<th align="left">interleukin_6</th>
+<th align="left">fibrin_degradation_products</th>
+<th align="left">monocytes_count</th>
+<th align="left">plt_distribution_width</th>
 <th align="left">globulin</th>
-<th align="left">γ-glutamyl transpeptidase</th>
-<th align="left">International standard ratio</th>
-<th align="left">basophil count(#)</th>
-<th align="left">2019-nCoV nucleic acid detection</th>
-<th align="left">mean corpuscular hemoglobin</th>
-<th align="left">Activation of partial thromboplastin time</th>
-<th align="left">High sensitivity C-reactive protein</th>
-<th align="left">HIV antibody quantification</th>
-<th align="left">serum sodium</th>
+<th align="left">γ-glutamyl_transpeptidase</th>
+<th align="left">international_standard_ratio</th>
+<th align="left">basophil_count(#)</th>
+<th align="left">2019-ncov_nucleic_acid_detection</th>
+<th align="left">mean_corpuscular_hemoglobin</th>
+<th align="left">activation_of_partial_thromboplastin_time</th>
+<th align="left">high_sensitivity_c-reactive_protein</th>
+<th align="left">hiv_antibody_quantification</th>
+<th align="left">serum_sodium</th>
 <th align="left">thrombocytocrit</th>
-<th align="left">ESR</th>
-<th align="left">glutamic-pyruvic transaminase</th>
-<th align="left">eGFR</th>
+<th align="left">esr</th>
+<th align="left">glutamic-pyruvic_transaminase</th>
+<th align="left">egfr</th>
 <th align="left">creatinine</th>
+<th align="left">survived</th>
+<th align="left">sex</th>
+<th align="left">age_group</th>
 </tr>
 </thead>
 <tbody>
@@ -1741,10 +1758,8 @@ div.tocify {
 <td align="left">Min. : 1.0</td>
 <td align="left">Min. :2020-01-10 19:45:00</td>
 <td align="left">Min. :18.00</td>
-<td align="left">Min. :1.000</td>
 <td align="left">Min. :2020-01-10 15:52:20</td>
 <td align="left">Min. :2020-01-23 09:09:23</td>
-<td align="left">Min. :0.0000</td>
 <td align="left">Min. : 1.9</td>
 <td align="left">Min. : 6.4</td>
 <td align="left">Min. : 71.50</td>
@@ -1819,16 +1834,17 @@ div.tocify {
 <td align="left">Min. : 5.00</td>
 <td align="left">Min. : 2.00</td>
 <td align="left">Min. : 11.00</td>
+<td align="left">Mode :logical</td>
+<td align="left">Length:6120</td>
+<td align="left">Length:6120</td>
 </tr>
 <tr class="even">
 <td align="left"></td>
 <td align="left">1st Qu.: 92.0</td>
 <td align="left">1st Qu.:2020-02-04 13:44:00</td>
 <td align="left">1st Qu.:47.00</td>
-<td align="left">1st Qu.:1.000</td>
 <td align="left">1st Qu.:2020-02-01 00:06:16</td>
 <td align="left">1st Qu.:2020-02-13 19:06:26</td>
-<td align="left">1st Qu.:0.0000</td>
 <td align="left">1st Qu.: 4.4</td>
 <td align="left">1st Qu.:113.0</td>
 <td align="left">1st Qu.: 99.05</td>
@@ -1903,16 +1919,17 @@ div.tocify {
 <td align="left">1st Qu.: 16.00</td>
 <td align="left">1st Qu.: 63.58</td>
 <td align="left">1st Qu.: 58.00</td>
+<td align="left">FALSE:3215</td>
+<td align="left">Class :character</td>
+<td align="left">Class :character</td>
 </tr>
 <tr class="odd">
 <td align="left"></td>
 <td align="left">Median :185.0</td>
 <td align="left">Median :2020-02-09 12:42:30</td>
 <td align="left">Median :62.00</td>
-<td align="left">Median :1.000</td>
 <td align="left">Median :2020-02-04 15:53:12</td>
 <td align="left">Median :2020-02-17 21:50:30</td>
-<td align="left">Median :0.0000</td>
 <td align="left">Median : 20.6</td>
 <td align="left">Median :125.0</td>
 <td align="left">Median :102.10</td>
@@ -1987,16 +2004,17 @@ div.tocify {
 <td align="left">Median : 24.00</td>
 <td align="left">Median : 87.90</td>
 <td align="left">Median : 76.00</td>
+<td align="left">TRUE :2905</td>
+<td align="left">Mode :character</td>
+<td align="left">Mode :character</td>
 </tr>
 <tr class="even">
 <td align="left"></td>
 <td align="left">Mean :184.8</td>
 <td align="left">Mean :2020-02-08 07:00:02</td>
 <td align="left">Mean :59.44</td>
-<td align="left">Mean :1.391</td>
 <td align="left">Mean :2020-02-03 18:57:56</td>
 <td align="left">Mean :2020-02-16 21:40:09</td>
-<td align="left">Mean :0.4747</td>
 <td align="left">Mean : 1223.2</td>
 <td align="left">Mean :123.1</td>
 <td align="left">Mean :103.14</td>
@@ -2071,16 +2089,17 @@ div.tocify {
 <td align="left">Mean : 38.86</td>
 <td align="left">Mean : 81.56</td>
 <td align="left">Mean : 109.93</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
 </tr>
 <tr class="odd">
 <td align="left"></td>
 <td align="left">3rd Qu.:270.0</td>
 <td align="left">3rd Qu.:2020-02-13 10:34:00</td>
 <td align="left">3rd Qu.:71.00</td>
-<td align="left">3rd Qu.:2.000</td>
 <td align="left">3rd Qu.:2020-02-09 02:06:58</td>
 <td align="left">3rd Qu.:2020-02-19 13:30:26</td>
-<td align="left">3rd Qu.:1.0000</td>
 <td align="left">3rd Qu.: 223.8</td>
 <td align="left">3rd Qu.:137.0</td>
 <td align="left">3rd Qu.:105.65</td>
@@ -2155,16 +2174,17 @@ div.tocify {
 <td align="left">3rd Qu.: 41.00</td>
 <td align="left">3rd Qu.:103.97</td>
 <td align="left">3rd Qu.: 98.25</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
 </tr>
 <tr class="even">
 <td align="left"></td>
 <td align="left">Max. :375.0</td>
 <td align="left">Max. :2020-02-18 17:49:00</td>
 <td align="left">Max. :95.00</td>
-<td align="left">Max. :2.000</td>
 <td align="left">Max. :2020-02-17 21:30:07</td>
 <td align="left">Max. :2020-03-04 16:21:51</td>
-<td align="left">Max. :1.0000</td>
 <td align="left">Max. :50000.0</td>
 <td align="left">Max. :178.0</td>
 <td align="left">Max. :140.40</td>
@@ -2239,13 +2259,14 @@ div.tocify {
 <td align="left">Max. :1600.00</td>
 <td align="left">Max. :224.00</td>
 <td align="left">Max. :1497.00</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
 </tr>
 <tr class="odd">
 <td align="left"></td>
 <td align="left">NA</td>
 <td align="left">NA’s :14</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
@@ -2323,6 +2344,9 @@ div.tocify {
 <td align="left">NA’s :5189</td>
 <td align="left">NA’s :5184</td>
 <td align="left">NA’s :5184</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
 </tr>
 </tbody>
 </table>
