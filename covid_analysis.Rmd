@@ -1,7 +1,7 @@
 ---
 title: "Covid Analysis"
 author: "Monika Zielińska"
-date: "21 11 2020"
+date: "`r format(Sys.time(), '%d.%m.%Y')`"
 output: 
   html_document:
     toc: true
@@ -18,6 +18,7 @@ library(dplyr)
 library(readxl)
 library(httr)
 require(zoo)
+library(cowplot)
 ```
 
 ```{r other options}
@@ -40,33 +41,70 @@ df <- as_tibble(data)
 df$PATIENT_ID <- na.locf(df$PATIENT_ID)
 df <- df %>% 
   rename_with(~ tolower(gsub(" ", "_", .x, fixed = TRUE))) %>%
-  mutate(survived = as.logical(outcome)) %>%
-  mutate(sex = ifelse(gender==1, "male", "female")) %>%
+  mutate(survived = ifelse(outcome==0, "yes", "no")) %>%
+  mutate(survived = factor(survived)) %>%
+  mutate(gender = ifelse(gender==1, "male", "female")) %>%
+  mutate(gender = factor(gender)) %>%
   mutate(age_group = case_when(
     age <= 30 ~ "young adult", 
     age < 65 ~ "adult",
     TRUE ~ "elderly")) %>%
-  select(-c(outcome, gender))
+  mutate(age_group = factor(age_group, 
+                            levels = c("young adult", "adult", "elderly"))) %>%
+  select(-c(outcome))
 
 patients_data <- df %>%
-  select(c(patient_id, sex, age, age_group, admission_time, discharge_time, survived)) %>%
+  select(c(patient_id, gender, age, age_group, admission_time, discharge_time, survived)) %>%
   unique() %>%
-  mutate(admission_date = as.Date(admission_time)) %>%
-  mutate(discharge_date = as.Date(discharge_time))
+  mutate(length_of_stay = as.numeric(discharge_time - admission_time, units = "days"))
+```
+## Introduction
+The dataset contains blood results of patients admitted to the hospital Tongji (Wuhan, China) between 10 January and 18 February 2020. The data collection method and basic statistics were used in the [article Tan et al](https://www.nature.com/articles/s42256-020-0180-7).
+
+## Patients data
+```{r dataset description}
+blood_tests_count = count(df)
+patients_count = count(patients_data)
+
+```
+The dataset contains `r blood_tests_count` blood tests of `r patients_count` patients. 
+
+The patients are categorized by age into young adults (18-30 years), adults (31-65 years) and elderly (> 65 years).
+
+```{r patients data summary}
+knitr::kable(summary(patients_data))
 ```
 
-```{r data description}
-count(df)
-count(patients_data)
-count(patients_data, sex)
-count(patients_data, age_group)
-count(patients_data, survived)
+Looking at the summary, most of the patients are middle or older aged. There are also more males than females and more people survived than not. 
+
+```{r patients data plots}
+survival_gender<-ggplot(patients_data, aes(x=gender, fill=survived)) +
+  geom_bar(stat='count') + 
+  labs(y = "number of patients")
+
+survival_age<-ggplot(patients_data, aes(x=age_group, fill=survived)) +
+  geom_bar(stat='count') + 
+  labs(y = "number of patients")  +
+  theme(legend.position = "none")
+
+plot_grid(survival_age, survival_gender)
+
+ggplot(patients_data, aes(x=gender, fill=survived)) +
+  geom_bar(stat='count') + 
+  facet_grid(. ~age_group) +
+  labs(y = "number of patients") 
 
 ```
 
-The dataset contains 6120 blood tests of 375 patients. There are 224 males and 151 females. There are 22 young adults (<= 30 years), 192 adults (< 65) and 161 elderly. 201 patients died, whereas 174 survived.
+At first it looks like males are more likely to die, but the survival rates depends mostly on age of the patient. Survival rates for elderly are much worse and most of the patients in this age group are males.
 
+```{r LOS}
+ggplot(patients_data, aes(ceiling(length_of_stay), fill=survived)) +
+  geom_bar(stat="count") +
+  labs(y = "number of patients", x = "length of stay (days)") 
+```
 
+There is a high mortality rate for first few days of stay in hospital. As the length of stay gets longer, survival rates get better.
 
 ```{r summary}
 knitr::kable(summary(df))
