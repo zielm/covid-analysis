@@ -9,39 +9,46 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+set.seed(23)
 ```
 
 ```{r libraries, include=FALSE}
-library(ggplot2)
-library(dplyr)
 library(readxl)
 library(httr)
-require(zoo)
-library(cowplot)
-```
 
-```{r other options}
-print.tbl_df <- function(x, ...) {
-  print.data.frame(x, ...)
-  invisible(x)
-}
+require(zoo)
+
+library(dplyr)
+library(tidyr)
+library(DT)
+
+library(ggplot2)
+library(corrplot)
+library(cowplot)
+
+library(caret)
 ```
 
 ```{r load data, include=FALSE, cache = TRUE}
 url_covid <- "http://www.cs.put.poznan.pl/dbrzezinski/teaching/zed/wuhan_blood_sample_data_Jan_Feb_2020.xlsx"
 GET(url_covid, write_disk(tf <- tempfile(fileext = ".xlsx")))
-data <- read_xlsx(tf)
+data <- read_xlsx(tf, .name_repair = "universal")
 unlink(tf)
 ```
 
 ```{r data cleaning, include=FALSE}
 df <- as_tibble(data)
-# replace NA with most recent not-NA prior to it
+
+# replace NA on patient_id with most recent not-NA prior to it
 df$PATIENT_ID <- na.locf(df$PATIENT_ID)
+
 df <- df %>% 
-  rename_with(~ tolower(gsub(" ", "_", .x, fixed = TRUE))) %>%
-  mutate(survived = ifelse(outcome==0, "yes", "no")) %>%
+  rename_with(~ tolower(gsub(".", "_", .x, fixed = TRUE))) %>%
+  rename_with(~ gsub('^\\_+|\\_+$', '', .x)) %>%
+  rename(survived = outcome) %>%
+  mutate(survived = ifelse(survived==0, "yes", "no")) %>%
   mutate(survived = factor(survived)) %>%
   mutate(gender = ifelse(gender==1, "male", "female")) %>%
   mutate(gender = factor(gender)) %>%
@@ -50,18 +57,28 @@ df <- df %>%
     age < 65 ~ "adult",
     TRUE ~ "elderly")) %>%
   mutate(age_group = factor(age_group, 
-                            levels = c("young adult", "adult", "elderly"))) %>%
-  select(-c(outcome))
+                            levels = c("young adult", "adult", "elderly")))
+
+blood_tests <- df %>%
+  select(-c("admission_time", "discharge_time")) %>%
+  group_by(patient_id) %>%
+  fill(everything(), .direction="downup") %>%
+  ungroup()
 
 patients_data <- df %>%
   select(c(patient_id, gender, age, age_group, admission_time, discharge_time, survived)) %>%
   unique() %>%
   mutate(length_of_stay = as.numeric(discharge_time - admission_time, units = "days"))
 ```
-## Introduction
+
+## Executive summary
 The dataset contains blood results of patients admitted to the hospital Tongji (Wuhan, China) between 10 January and 18 February 2020. The data collection method and basic statistics were used in the [article Tan et al](https://www.nature.com/articles/s42256-020-0180-7).
 
-## Patients data
+Each row in the dataset contains information about patient and the specific blood test results. Because tests don't check every biomarker, there are many NA values. I've filled NA values with the closest earlier value and if it is not possible - closest latest value for a patient. If the patient doesn't have any results for biomarker then the value is kept as NA.
+
+
+
+## Patients data overview
 ```{r dataset description}
 blood_tests_count = count(df)
 patients_count = count(patients_data)
@@ -76,6 +93,8 @@ knitr::kable(summary(patients_data))
 ```
 
 Looking at the summary, most of the patients are middle or older aged. There are also more males than females and more people survived than not. 
+
+### Survival vs age and gender
 
 ```{r patients data plots}
 survival_gender<-ggplot(patients_data, aes(x=gender, fill=survived)) +
@@ -98,14 +117,172 @@ ggplot(patients_data, aes(x=gender, fill=survived)) +
 
 At first it looks like males are more likely to die, but the survival rates depends mostly on age of the patient. Survival rates for elderly are much worse and most of the patients in this age group are males.
 
+### Survival vs length of the stay 
+
 ```{r LOS}
 ggplot(patients_data, aes(ceiling(length_of_stay), fill=survived)) +
   geom_bar(stat="count") +
   labs(y = "number of patients", x = "length of stay (days)") 
 ```
 
-There is a high mortality rate for first few days of stay in hospital. As the length of stay gets longer, survival rates get better.
+There is a high mortality rate for the first few days of the stay in hospital. Most likely, because people without symptoms wouldn't be in a hospital and people with symptoms are unlikely to get discharged after only with days. As the length of the stay gets longer, survival rates get better.
 
-```{r summary}
-knitr::kable(summary(df))
+### Survival rates over the time
+
+```{r survival over time}
+survival_over_time <- patients_data %>%
+  mutate(discharge_day = as.Date(discharge_time)) %>% 
+  group_by(discharge_day) %>%
+  mutate(deaths = sum(survived=='no')) %>%
+  mutate(survivals = sum(survived=='yes')) %>%
+  select(discharge_day, survivals, deaths) %>%
+  unique() %>% 
+  arrange(discharge_day)
+
+ggplot(survival_over_time, aes(discharge_day)) + 
+  geom_line(aes(y=cumsum(deaths), color="deaths")) +
+  geom_line(aes(y=cumsum(survivals), color="survivals")) +
+  labs(y = "sum of patients", x = "date") 
+
+```
+
+It can be observed that over time there were more survivals than deaths. Probably thanks to being better prepared to fight with the virus.
+
+## Atributes
+
+<details>
+<summary>All attributes before data cleaning</summary>
+  ```{r, echo=FALSE, eval=TRUE}
+  knitr::kable(t(summary(data)))
+  ```
+</details>
+
+<details>
+<summary>All attributes after data cleaning</summary>
+  ```{r, echo=FALSE, eval=TRUE}
+  knitr::kable(t(summary(blood_tests)))
+  ```
+</details>
+
+
+### Correlation between all biomarkers and survival
+
+Checking correlation between all biomarkers and survival rate to choose which biomarkers are most likely be good indicator for survival.
+                                                     
+```{r corr}
+# get last blood results from every patient
+
+biomarkers <- blood_tests %>% 
+  select(-c("patient_id", "re_date", "gender", "age_group"))  %>% 
+  mutate_if(is.factor, as.numeric)
+
+mcor <- cor(biomarkers,use="pairwise.complete.obs")
+cor_survived <- data.frame(mcor["survived",]) %>%
+  rename(corr = 1)
+DT::datatable(cor_survived)
+
+corr_val = 0.6
+```
+
+### Chosen biomarkers
+
+For further analysis there were only chosen biomarkers with correlation with survival (negative or positive) > `r corr_val*100`%.
+
+```{r chosen corr}
+
+chosen_biomarkers <- cor_survived %>%
+  filter(corr > corr_val | corr < -corr_val)
+
+DT::datatable(chosen_biomarkers)
+
+chosen_biomarkers_values <- biomarkers %>% 
+  select(rownames(chosen_biomarkers))
+
+draw_corrplot <- function(biomarkers_val) {
+  biomarkers_for_corrplot <- biomarkers_val
+  biomarkers_names <- names(biomarkers_for_corrplot)
+  abbreviated_names <- abbreviate(names(biomarkers_for_corrplot), minlength = 7)
+  names(biomarkers_for_corrplot) <- abbreviated_names
+  
+  matrix_for_corrplot <- cor(biomarkers_for_corrplot, use="pairwise.complete.obs")
+  matrix_for_corrplot <- ifelse(matrix_for_corrplot > -1*corr_val &
+                                  matrix_for_corrplot < corr_val,
+                                NA, matrix_for_corrplot)
+  
+  corrplot(matrix_for_corrplot, 
+           na.label = " ",
+           method = "number")
+}
+
+draw_corrplot(chosen_biomarkers_values)
+```
+
+As there are strong correlation between lymphocyte, albumin, neutrophils and neutrophils_count, only lymphocyte will remain as chosen biomarker (as the one with the highest correlation with survival). The same situation is between d_d_dimer, prothrombin_activity and lactate_dehydrogenase, as d_d_dimer has correlation between the two mentioned it will be the one to remain.
+
+### Final biomarkers
+
+```{r final corr}
+exclude_biomarkers <- c("albumin", "neutrophils", "neutrophils_count", "prothrombin_activity", "lactate_dehydrogenase")
+chosen_biomarkers_values <- chosen_biomarkers_values %>%
+  select(-exclude_biomarkers)
+
+draw_corrplot(chosen_biomarkers_values)
+
+```
+## Classificator
+
+Each patient is described with chosen earlier biomarks (mean of all of his results), age and label if he survived.
+
+```{r data for classificator}
+data_for_classification <- blood_tests %>%
+  select(patient_id, age, colnames(chosen_biomarkers_values)) %>%
+  group_by(patient_id) %>%
+  rename(hs_crp = high_sensitivity_c_reactive_protein) %>%
+  mutate(
+    lymphocyte = mean(lymphocyte, na.rm = TRUE),
+    d_d_dimer = mean(d_d_dimer, na.rm = TRUE),
+    hs_crp = mean(hs_crp, na.rm = TRUE))%>%
+  unique() %>%
+  ungroup() %>%
+  select(-patient_id) %>%
+  mutate(
+    lymphocyte = if_else(is.na(lymphocyte), median(lymphocyte, na.rm = TRUE), lymphocyte),
+    d_d_dimer = if_else(is.na(d_d_dimer), median(d_d_dimer, na.rm = TRUE), d_d_dimer),
+    hs_crp = if_else(is.na(hs_crp), median(hs_crp, na.rm = TRUE), hs_crp)
+   )
+
+knitr::kable(summary(data_for_classification))
+
+```
+
+```{r data partition}
+inTraining <- 
+    createDataPartition(
+        y = data_for_classification$survived,
+        p = 0.7,
+        list = FALSE)
+
+training <- data_for_classification[ inTraining,]
+testing  <- data_for_classification[-inTraining,]
+
+```
+
+For classification was used random forest. 70% of the dataset was used for training, remaining 30% for testing.
+
+```{r classification.}
+ctrl <- trainControl(
+    method = "repeatedcv",
+    number = 10,
+    repeats = 5)
+
+fit <- train(survived ~ .,
+             data = training,
+             method = "rf",
+             trControl = ctrl,
+             ntree = 10,
+            na.action=na.exclude)
+
+fit
+rfClasses <- predict(fit, newdata = testing)
+confusionMatrix(data = rfClasses, testing$survived, positive="yes")
 ```
