@@ -74,8 +74,11 @@ patients_data <- df %>%
 ## Executive summary
 The dataset contains blood results of patients admitted to the hospital Tongji (Wuhan, China) between 10 January and 18 February 2020. The data collection method and basic statistics were used in the [article Tan et al](https://www.nature.com/articles/s42256-020-0180-7).
 
-Each row in the dataset contains information about patient and the specific blood test results. Because tests don't check every biomarker, there are many NA values. I've filled NA values with the closest earlier value and if it is not possible - closest latest value for a patient. If the patient doesn't have any results for biomarker then the value is kept as NA.
+Each row in the dataset contains information about patient and the specific blood test results. Because tests don't check every biomarker, there are many NA values. For further analysis NA values were filled with the closest earlier value and if it is not possible - closest latest value for a patient. If the patient doesn't have any results for the biomarker then the value is kept as NA.
 
+Analysis of the basic patient information showed that age is one of the most important factors in survivability of the illness.
+
+During biomarkers analysis 3 biomarkers were chosen that showed the most potential for using it to predict surival chances of the patients - lymphocytes(%), D-D dimer and high-sensitivity C-reactive protein (hs-CRP).  
 
 
 ## Patients data overview
@@ -86,13 +89,13 @@ patients_count = count(patients_data)
 ```
 The dataset contains `r blood_tests_count` blood tests of `r patients_count` patients. 
 
-The patients are categorized by age into young adults (18-30 years), adults (31-65 years) and elderly (> 65 years).
+The patients were categorized by age into young adults (18-30 years), adults (31-65 years) and elderly (> 65 years) for easier way to show dependencies.
 
 ```{r patients data summary}
 knitr::kable(summary(patients_data))
 ```
 
-Looking at the summary, most of the patients are middle or older aged. There are also more males than females and more people survived than not. 
+Looking at the summary, most of the patients are middle or older aged. The dataset contains also more males than females and more people survived than not. 
 
 ### Survival vs age and gender
 
@@ -127,7 +130,7 @@ ggplot(patients_data, aes(ceiling(length_of_stay), fill=survived)) +
 
 There is a high mortality rate for the first few days of the stay in hospital. Most likely, because people without symptoms wouldn't be in a hospital and people with symptoms are unlikely to get discharged after only with days. As the length of the stay gets longer, survival rates get better.
 
-### Survival rates over the time
+### Cummulative sum of deaths and survivals over time
 
 ```{r survival over time}
 survival_over_time <- patients_data %>%
@@ -146,32 +149,33 @@ ggplot(survival_over_time, aes(discharge_day)) +
 
 ```
 
-It can be observed that over time there were more survivals than deaths. Probably thanks to being better prepared to fight with the virus.
 
 ## Atributes
 
+### Summary
+Below are summaries of all available attributes before and after cleaning the dataset.
+
 <details>
-<summary>All attributes before data cleaning</summary>
+<summary>Show/Hide all attributes before data cleaning</summary>
   ```{r, echo=FALSE, eval=TRUE}
   knitr::kable(t(summary(data)))
   ```
 </details>
 
 <details>
-<summary>All attributes after data cleaning</summary>
+<summary>Show/Hide all attributes after data cleaning</summary>
   ```{r, echo=FALSE, eval=TRUE}
   knitr::kable(t(summary(blood_tests)))
   ```
 </details>
 
+### Correlation between biomarkers and survival
 
-### Correlation between all biomarkers and survival
+An analysis of correlation between all biomarkers and survival rate was conducted to choose which biomarkers are most likely to be good indicators for survival of the patient. 
 
-Checking correlation between all biomarkers and survival rate to choose which biomarkers are most likely be good indicator for survival.
+Age parameter was also added as, from previous analysis, it looked like important factor for patient survival.
                                                      
 ```{r corr}
-# get last blood results from every patient
-
 biomarkers <- blood_tests %>% 
   select(-c("patient_id", "re_date", "gender", "age_group"))  %>% 
   mutate_if(is.factor, as.numeric)
@@ -186,7 +190,11 @@ corr_val = 0.6
 
 ### Chosen biomarkers
 
-For further analysis there were only chosen biomarkers with correlation with survival (negative or positive) > `r corr_val*100`%.
+For further analysis, only biomarkers with correlation with survival of at least `r corr_val*100`% (negative or positive) were chosen. 
+
+Age scored less than `r corr_val*100`% but it was still added to check the correlation between it and chosen biomarkers.
+
+To improve readability, on the correlation plot, only values with at least `r corr_val*100`% are shown.
 
 ```{r chosen corr}
 
@@ -196,7 +204,7 @@ chosen_biomarkers <- cor_survived %>%
 DT::datatable(chosen_biomarkers)
 
 chosen_biomarkers_values <- biomarkers %>% 
-  select(rownames(chosen_biomarkers))
+  select(rownames(chosen_biomarkers), age)
 
 draw_corrplot <- function(biomarkers_val) {
   biomarkers_for_corrplot <- biomarkers_val
@@ -217,25 +225,23 @@ draw_corrplot <- function(biomarkers_val) {
 draw_corrplot(chosen_biomarkers_values)
 ```
 
-As there are strong correlation between lymphocyte, albumin, neutrophils and neutrophils_count, only lymphocyte will remain as chosen biomarker (as the one with the highest correlation with survival). The same situation is between d_d_dimer, prothrombin_activity and lactate_dehydrogenase, as d_d_dimer has correlation between the two mentioned it will be the one to remain.
+As there were strong correlations between lymphocyte, albumin, neutrophils and neutrophils_count, only lymphocyte was chosen for further analysis. As it has the highest correlation with survival.
+
+The same situation is between d_d_dimer, prothrombin_activity and lactate_dehydrogenase. And as d_d_dimer has correlation between the other two, it was the one to remain.
+
+Age doesn't have any significant correlation with any of the biomarkers.
 
 ### Final biomarkers
 
 ```{r final corr}
-exclude_biomarkers <- c("albumin", "neutrophils", "neutrophils_count", "prothrombin_activity", "lactate_dehydrogenase")
+exclude_biomarkers <- c("albumin", "neutrophils", "neutrophils_count", "prothrombin_activity", "lactate_dehydrogenase", "age")
 chosen_biomarkers_values <- chosen_biomarkers_values %>%
   select(-exclude_biomarkers)
 
 draw_corrplot(chosen_biomarkers_values)
 
-```
-## Classificator
-
-Each patient is described with chosen earlier biomarks (mean of all of his results), age and label if he survived.
-
-```{r data for classificator}
-data_for_classification <- blood_tests %>%
-  select(patient_id, age, colnames(chosen_biomarkers_values)) %>%
+patients_with_biomarkers <- blood_tests %>%
+  select(patient_id, age, age_group, colnames(chosen_biomarkers_values)) %>%
   group_by(patient_id) %>%
   rename(hs_crp = high_sensitivity_c_reactive_protein) %>%
   mutate(
@@ -243,13 +249,49 @@ data_for_classification <- blood_tests %>%
     d_d_dimer = mean(d_d_dimer, na.rm = TRUE),
     hs_crp = mean(hs_crp, na.rm = TRUE))%>%
   unique() %>%
-  ungroup() %>%
-  select(-patient_id) %>%
+  ungroup()
+```
+
+### Survival vs biomarkers
+```{r final biomarkers plots}
+ggplot(data=subset(patients_with_biomarkers, !is.na(lymphocyte)),
+                          aes(x=ceiling(lymphocyte), fill=survived)) +
+  geom_bar(stat="count") +
+  labs(y = "number of patients", x = "lymphocyte(%)") + 
+  facet_grid(. ~age_group)
+
+ggplot(data=subset(patients_with_biomarkers, !is.na(d_d_dimer)),
+                          aes(x=ceiling(d_d_dimer), fill=survived)) +
+                    geom_bar(stat="count") +
+  labs(y = "number of patients", x = "D-D dimer") + 
+  facet_grid(. ~age_group)
+
+ggplot(data=subset(patients_with_biomarkers, !is.na(hs_crp)),
+                          aes(x=ceiling(hs_crp), fill=survived)) +
+                    geom_bar(stat="count") +
+  labs(y = "number of patients", x = "hs-CRP") + 
+  facet_grid(. ~age_group)
+```
+
+As it can be see from correlation plot the lower lymphocytes and higher hs-CRP and D-d dimer significantly affect mortality. And when looking at bar plots divided in age groups, it confirms that biomarkers are not correlated with age.
+
+## Classificator
+
+Each patient is described with chosen earlier biomarkers (mean of all of his results), age and label if he survived. 
+
+If the value of a biomark is NA then it is filled with median value from dataset.
+
+### Summary of data for classificator
+
+```{r data for classificator}
+data_for_classification <- patients_with_biomarkers %>%
+  select(-c(age_group, patient_id)) %>%
   mutate(
     lymphocyte = if_else(is.na(lymphocyte), median(lymphocyte, na.rm = TRUE), lymphocyte),
     d_d_dimer = if_else(is.na(d_d_dimer), median(d_d_dimer, na.rm = TRUE), d_d_dimer),
     hs_crp = if_else(is.na(hs_crp), median(hs_crp, na.rm = TRUE), hs_crp)
    )
+  
 
 knitr::kable(summary(data_for_classification))
 
@@ -266,6 +308,8 @@ training <- data_for_classification[ inTraining,]
 testing  <- data_for_classification[-inTraining,]
 
 ```
+
+### Results
 
 For classification was used random forest. 70% of the dataset was used for training, remaining 30% for testing.
 
@@ -284,5 +328,24 @@ fit <- train(survived ~ .,
 
 fit
 rfClasses <- predict(fit, newdata = testing)
-confusionMatrix(data = rfClasses, testing$survived, positive="yes")
+confusionMatrix(data = rfClasses, testing$survived, positive="no")
 ```
+
+### Analysis of the classificator results
+
+The best result for the classificator would be to tell who is not going to survive, so the medics could try to save them.
+
+#### Sensitivity
+Sensitivity measures the proportion of true positives that are correctly identified. Because the survival positive is set to "no", this measure shows how many patients who would die were correctly identified. The result of 92% is not bad, but it should be better.
+
+#### Specificity 
+Specificity measures the proportion of those who truly won't die and are correctly identified as such. This result is a little less important, but during pandemic when hospitals are full, it's good to be able to correctly diagnose that somebody will live and don't need to stay in hospital. 
+
+#### Variable importance
+```{r variable importance}
+print(varImp(fit, scale = FALSE))
+```
+Lymphocytes are the most important factor in the classification.
+
+Surprisingly, age plays the least important role.
+
